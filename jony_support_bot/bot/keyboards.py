@@ -53,8 +53,10 @@ def admin_main_menu():
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="🔍 Support qidirish")],
+            [KeyboardButton(text="➕ Yangi guruh qo'shish")],
             [KeyboardButton(text="📋 Kutilayotgan so'rovlar")],
-            [KeyboardButton(text="📊 Filial statistikasi")],
+            [KeyboardButton(text="📊 Filial statistikasi"), KeyboardButton(text="📈 Ish yuki statistikasi")],
+            [KeyboardButton(text="👑 Adminlar ro'yxati")],
         ],
         resize_keyboard=True,
     )
@@ -88,9 +90,18 @@ def approve_request_kb(user_id: int):
                 InlineKeyboardButton(text="✅ Support", callback_data=f"approve:{user_id}:support"),
                 InlineKeyboardButton(text="✅ Examiner", callback_data=f"approve:{user_id}:examiner"),
             ],
+            [InlineKeyboardButton(text="👑 Admin qilib tayinlash", callback_data=f"approve:{user_id}:admin")],
             [InlineKeyboardButton(text="❌ Rad etish", callback_data=f"reject:{user_id}")],
         ]
     )
+
+
+def admins_list_kb(rows):
+    buttons = []
+    for r in rows:
+        label = f"❌ {r['first_name']} {r['last_name']} — adminlikni bekor qilish"
+        buttons.append([InlineKeyboardButton(text=label, callback_data=f"revoke_admin_confirm:{r['id']}")])
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
 def support_results_kb(rows, prefix="card"):
@@ -105,10 +116,20 @@ def admin_card_actions_kb(user_id: int):
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="✏️ Tahrirlash", callback_data=f"editmenu:{user_id}")],
+            [InlineKeyboardButton(text="➕ Guruh qo'shish", callback_data=f"addgroup:{user_id}")],
             [InlineKeyboardButton(text="🔁 Guruhlarni boshqarish", callback_data=f"groupsmenu:{user_id}")],
             [InlineKeyboardButton(text="🗑 Supportni o'chirish", callback_data=f"delsupport_confirm:{user_id}")],
         ]
     )
+
+
+def workload_recommend_kb(rows):
+    buttons = []
+    for i, r in enumerate(rows):
+        mark = "🧠 " if i == 0 else ""
+        label = f"{mark}{r['first_name']} {r['last_name']} — {r['group_count']} ta guruh"
+        buttons.append([InlineKeyboardButton(text=label, callback_data=f"newgroup_pick:{r['id']}")])
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
 def edit_field_kb(user_id: int):
