@@ -130,6 +130,50 @@ def get_all_supports():
     return rows
 
 
+def get_workload_stats(branch: str = None):
+    """Har bir supportda nechta guruh borligi (kam -> ko'p tartibda)."""
+    conn = get_connection()
+    query = """
+        SELECT u.id, u.first_name, u.last_name, u.branch, COUNT(g.id) as group_count
+        FROM users u
+        LEFT JOIN groups g ON g.support_id = u.id
+        WHERE u.role = 'support' AND u.status = 'approved'
+    """
+    params = []
+    if branch:
+        query += " AND u.branch = ?"
+        params.append(branch)
+    query += " GROUP BY u.id ORDER BY group_count ASC, u.last_name ASC"
+    rows = conn.execute(query, params).fetchall()
+    conn.close()
+    return rows
+
+
+def is_admin_in_db(telegram_id: int) -> bool:
+    """.env dagi ADMIN_IDS dan tashqari, bot orqali admin qilib tayinlangan foydalanuvchilar."""
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT 1 FROM users WHERE telegram_id = ? AND role = 'admin' AND status = 'approved'",
+        (telegram_id,),
+    ).fetchone()
+    conn.close()
+    return row is not None
+
+
+def get_db_admins():
+    conn = get_connection()
+    rows = conn.execute("SELECT * FROM users WHERE role = 'admin' AND status = 'approved'").fetchall()
+    conn.close()
+    return rows
+
+
+def revoke_admin(user_id: int):
+    conn = get_connection()
+    conn.execute("UPDATE users SET status = 'rejected' WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+
+
 def get_branch_stats():
     conn = get_connection()
     rows = conn.execute(
